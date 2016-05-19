@@ -3,6 +3,7 @@
 #include <iostream>
 #include <vector>
 #include "LTexture.h"
+#include "Object.h"
 
 enum Textures {
 	DOT, TRIANGLE, MAX_TEXTURES
@@ -24,61 +25,14 @@ bool Init();
 bool LoadMedia();
 void BallBounceLoop();
 
-struct Point {
-	int x, y;
-};
-
-class Polygon {
-public:
-	void AddVertex(Point vertex) { // Adds a vertex (position relative to polygon's position)
-		vertex.x += mPosX;
-		vertex.y += mPosY;
-		vertices.push_back(vertex);
-		mSides = vertices.size();
-	}
-	// SETTERS
-	void SetPosition(int x, int y) { mPosX = x; mPosY = y; }
-	// GETTERS
-	int GetSides() { return mSides; }
-	int GetPosX() { return mPosX; }
-	int GetPosY() { return mPosY; }
-	Point* GetVertex(int i) { return &vertices[i]; }
-private:
-	std::vector<Point>vertices; // Vertices vector
-	int mPosX, mPosY; // Top left coordinate
-	int mSides; // Number of sides
-};
-
-int pnpoly(int nvert, float *vertx, float *verty, float testx, float testy) {
-	int i, j, c = 0;
-	for (i = 0, j = nvert - 1; i < nvert; j = i++) {
-		if (((verty[i]>testy) != (verty[j]>testy)) &&
-			(testx < (vertx[j] - vertx[i]) * (testy - verty[i]) / (verty[j] - verty[i]) + vertx[i]))
-			c = !c;
-	}
-	return c;
-}
-
-bool IsInside(Polygon polygon, Point point) {
-	int i, j;
-	bool c = false;
-	for (i = 0, j = polygon.GetSides() - 1; i < polygon.GetSides(); j = i++) {
-		if (((polygon.GetVertex(i)->y > point.y) != (polygon.GetVertex(j)->y > point.y)) &&
-			(point.x < (polygon.GetVertex(j)->x - polygon.GetVertex(i)->x) * (point.y - polygon.GetVertex(i)->y) / (polygon.GetVertex(j)->y - polygon.GetVertex(i)->y) + polygon.GetVertex(i)->x)) {
-			c = !c;
-		}
-	}
-	return c;
-}
-
 int main(int args, char *argv[]) {
 	if (Init() && LoadMedia()) {
 		bool isGameDone = false;
-		Polygon trianglePoly;
-		trianglePoly.SetPosition(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2);
-		trianglePoly.AddVertex(Point{ 0, gTextures[TRIANGLE].GetHeight() });
-		trianglePoly.AddVertex(Point{ gTextures[TRIANGLE].GetWidth() / 2, 0 });
-		trianglePoly.AddVertex(Point{ gTextures[TRIANGLE].GetWidth(), gTextures[TRIANGLE].GetHeight() });
+		Object triangle(&gTextures[TRIANGLE], 1);
+		triangle.mPolygon.SetPosition(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2);
+		triangle.mPolygon.AddVertex(Point{ 0, gTextures[TRIANGLE].GetHeight() });
+		triangle.mPolygon.AddVertex(Point{ gTextures[TRIANGLE].GetWidth() / 2, 0 });
+		triangle.mPolygon.AddVertex(Point{ gTextures[TRIANGLE].GetWidth(), gTextures[TRIANGLE].GetHeight() });
 		int mouseX, mouseY;
 		while (!isGameDone) {
 			while (SDL_PollEvent(&e)) {
@@ -88,11 +42,11 @@ int main(int args, char *argv[]) {
 			}
 			SDL_GetMouseState(&mouseX, &mouseY);
 			std::cout << mouseX << ", " << mouseY << std::endl;
-			if (IsInside(trianglePoly, Point{ mouseX, mouseY })) {
+			if (triangle.mPolygon.IsInside(Point{ mouseX, mouseY })) {
 				std::cout << "Inside!\n";
 			}
 			SDL_RenderClear(gRenderer);
-			gTextures[TRIANGLE].Render(trianglePoly.GetPosX(), trianglePoly.GetPosY());
+			gTextures[TRIANGLE].Render(triangle.mPolygon.GetPosX(), triangle.mPolygon.GetPosY());
 			SDL_RenderPresent(gRenderer);
 		}
 	}
