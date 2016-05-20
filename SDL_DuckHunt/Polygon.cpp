@@ -1,6 +1,5 @@
 #include "Polygon.h"
 #include <iostream>
-#include <cmath>
 
 void Polygon::AddVertex(Point vertex) { // Adds a vertex (position relative to polygon's position)
 	vertex.x += mPosX;
@@ -14,8 +13,8 @@ void Polygon::AddVertex(Point vertex) { // Adds a vertex (position relative to p
 
 bool Polygon::IsInside(Point point) {
 	if (mIsCircle) {
-		int deltaX = point.x - mPosX - radius;
-		int deltaY = point.y - mPosY - radius;
+		int deltaX = point.x - (mPosX + radius);
+		int deltaY = point.y - (mPosY + radius);
 		return ((deltaX * deltaX) + (deltaY * deltaY) <= (radius * radius));
 	}
 	 

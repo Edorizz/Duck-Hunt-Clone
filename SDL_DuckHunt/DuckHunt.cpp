@@ -29,40 +29,34 @@ int main(int args, char *argv[]) {
 	if (Init() && LoadMedia()) {
 		bool isGameDone = false;
 
-		Object triangle(&gTextures[TRIANGLE], 1);
-		triangle.GetPolygon()->SetPosition(SCREEN_WIDTH / 4, SCREEN_HEIGHT / 2);
-		triangle.GetPolygon()->AddVertex(Point{ 0, gTextures[TRIANGLE].GetHeight() });
-		triangle.GetPolygon()->AddVertex(Point{ gTextures[TRIANGLE].GetWidth() / 2, 0 });
-		triangle.GetPolygon()->AddVertex(Point{ gTextures[TRIANGLE].GetWidth(), gTextures[TRIANGLE].GetHeight() });
-
-		Object circle(&gTextures[DOT], 1);
-		circle.GetPolygon()->SetPosition(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2);
-		circle.GetPolygon()->SetRadius(circle.GetTexture()->GetWidth() / 2); //! CIRCLE RADIUS IS MESSED UP
+		Object *circle = new Object(&gTextures[DOT], 1);
+		circle->GetPolygon()->SetPosition(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2);
+		circle->GetPolygon()->SetRadius(circle->GetTexture()->GetWidth() / 2);
+		circle->SetVel(1, 1);
 
 		int mouseX, mouseY;
 		while (!isGameDone) {
 			while (SDL_PollEvent(&e)) {
 				if (e.type == SDL_QUIT) {
 					isGameDone = true;
-				} if (e.type == SDL_KEYDOWN) {
-					switch (e.key.keysym.sym) {
-					case SDLK_SPACE:
-						SDL_GetMouseState(&mouseX, &mouseY);
-						if (circle.GetPolygon()->IsInside(Point{ mouseX, mouseY })) {
-							std::cout << "Inside circle!\n";
-						}
-						if (triangle.GetPolygon()->IsInside(Point{ mouseX, mouseY })) {
-							std::cout << "Inside triangle!\n";
-						}
-					default:
-						break;
+				} if (e.type == SDL_MOUSEBUTTONDOWN) {
+					SDL_GetMouseState(&mouseX, &mouseY);
+					if (circle->GetPolygon()->IsInside(Point{ mouseX, mouseY })) {
+						std::cout << "Click!\n";
+						delete circle;
+						circle = new Object(&gTextures[DOT], 1);
+						circle->GetPolygon()->SetPosition(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2);
+						circle->GetPolygon()->SetRadius(circle->GetTexture()->GetWidth() / 2);
+						circle->SetVel(1, 1);
 					}
 				}
 			}
-		
+			// Updating
+			circle->Update();
+
+			// Rendering
 			SDL_RenderClear(gRenderer);
-			triangle.Render();
-			circle.Render();
+			circle->Render();
 			SDL_RenderPresent(gRenderer);
 		}
 	}
