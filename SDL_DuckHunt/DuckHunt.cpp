@@ -2,6 +2,9 @@
 #include <SDL_image.h>
 #include <iostream>
 #include <vector>
+#include <random>
+#include <ctime>
+#include <cmath>
 #include "LTexture.h"
 #include "Object.h"
 
@@ -13,6 +16,8 @@ enum Textures {
 const int SCREEN_HEIGHT = 480;
 const int SCREEN_WIDTH = 640;
 
+int maxVel = 8;
+
 // Globals
 SDL_Window *gWindow = nullptr;
 SDL_Renderer *gRenderer = nullptr;
@@ -20,43 +25,38 @@ LTexture gTextures[MAX_TEXTURES];
 TTF_Font *gFont = nullptr;
 SDL_Event e;
 
+std::mt19937 randomGenerator(time(0));
+std::uniform_int_distribution<int> random(-maxVel,maxVel);
+
+// Objects
+Object *ball = nullptr;
+
 // Prototypes
 bool Init();
 bool LoadMedia();
-void BallBounceLoop();
+Object* NewBall();
+int RandomPositiveOrNegative(int x);
+void SetRandomVelocity(Object* obj);
 
 int main(int args, char *argv[]) {
 	if (Init() && LoadMedia()) {
 		bool isGameDone = false;
-
-		Object *circle = new Object(&gTextures[DOT], 1);
-		circle->GetPolygon()->SetPosition(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2);
-		circle->GetPolygon()->SetRadius(circle->GetTexture()->GetWidth() / 2);
-		circle->SetVel(1, 1);
-
-		int mouseX, mouseY;
+		ball = NewBall();
 		while (!isGameDone) {
-			while (SDL_PollEvent(&e)) {
+			while (SDL_PollEvent(&e)) { // The main event handler
 				if (e.type == SDL_QUIT) {
 					isGameDone = true;
-				} if (e.type == SDL_MOUSEBUTTONDOWN) {
-					SDL_GetMouseState(&mouseX, &mouseY);
-					if (circle->GetPolygon()->IsInside(Point{ mouseX, mouseY })) {
-						std::cout << "Click!\n";
-						delete circle;
-						circle = new Object(&gTextures[DOT], 1);
-						circle->GetPolygon()->SetPosition(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2);
-						circle->GetPolygon()->SetRadius(circle->GetTexture()->GetWidth() / 2);
-						circle->SetVel(1, 1);
-					}
+				}
+				if (ball->HandleEvent(&e)) {
+					delete ball;
+					ball = NewBall();
 				}
 			}
 			// Updating
-			circle->Update();
-
+			ball->Update();
 			// Rendering
 			SDL_RenderClear(gRenderer);
-			circle->Render();
+			ball->Render();
 			SDL_RenderPresent(gRenderer);
 		}
 	}
@@ -64,57 +64,39 @@ int main(int args, char *argv[]) {
 	return 0;
 }
 
-void BallBounceLoop() {
-	bool isGameDone = false;
-	int mouseX, mouseY;
-	int dotX = SCREEN_WIDTH / 2, dotY = SCREEN_HEIGHT / 2;
-	int dotVelX = 1, dotVelY = 1;
-	int speed = 1;
-	while (!isGameDone) {
-		while (SDL_PollEvent(&e)) {
-			if (e.type == SDL_QUIT) {
-				isGameDone = true;
-			} else if (e.type == SDL_KEYDOWN) {
-				switch (e.key.keysym.sym) {
-				case SDLK_d:
-					speed++;
-					break;
-				case SDLK_a:
-					speed--;
-					break;
-				case SDLK_SPACE:
-					dotVelX = (rand() % 5 + 1);
-					dotVelY = (rand() % 5 + 1);
-				default:
-					break;
-				}
-			}
-		}
-		dotX += dotVelX * speed;
-		dotY += dotVelY * speed;
 
-		if (dotX + gTextures[DOT].GetWidth() >= SCREEN_WIDTH) {
-			dotVelX = -1;
-		} else if (dotX <= 0) {
-			dotVelX = 1;
-		}
-		if (dotY + gTextures[DOT].GetHeight() >= SCREEN_HEIGHT) {
-			dotVelY = -1;
-		} else if (dotY <= 0) {
-			dotVelY = 1;
-		}
-		SDL_GetMouseState(&mouseX, &mouseY);
-		int deltaX = mouseX - (dotX + gTextures[DOT].GetWidth() / 2);
-		int deltaY = mouseY - (dotY + gTextures[DOT].GetHeight() / 2);
-		if ((deltaX * deltaX + deltaY * deltaY) <= gTextures[DOT].GetWidth() / 2 * gTextures[DOT].GetWidth() / 2) {
-			std::cout << "Inside circle!\n";
-		}
-		SDL_RenderClear(gRenderer);
-		gTextures[DOT].Render(dotX, dotY);
-		SDL_RenderPresent(gRenderer);
-	}
+// OBJECT HELPER FUNCTIONS
+Object* NewBall() {
+	Object *obj = new Object(&gTextures[DOT], 1);
+	obj->GetPolygon()->SetPosition(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2);
+	obj->GetPolygon()->SetRadius(obj->GetTexture()->GetWidth());
+	SetRandomVelocity(obj);
+	return obj;
 }
 
+
+void SetRandomVelocity(Object* obj) {
+	int velX = random(randomGenerator);
+	int velY = RandomPositiveOrNegative(maxVel - abs(velX));
+	obj->SetVel(velX, velY);
+}
+
+
+// MATH FUNCTIONS
+int RandomPositiveOrNegative(int x) {
+	int rand = random(randomGenerator);
+	if (rand < 0) {
+		return x * -1;
+	}
+	return x;
+}
+
+
+// GAME HELPER FUNCTIONS
+
+
+
+// MAIN FUNCTIONS
 bool Init() {
 	bool success = true;
 	if (SDL_Init(SDL_INIT_VIDEO) < 0) {

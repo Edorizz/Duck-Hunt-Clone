@@ -8,7 +8,8 @@ extern const int SCREEN_WIDTH;
 class Object {
 public:
 	Object(LTexture *texture, int renderingType);
-	void Update();
+	void Update(); // Updates position, if ball is out of bounds it bounces back
+	bool HandleEvent(SDL_Event *e); // Returns true if we interacted with the ball
 	void Render(); // Renders the object at the polygon's position
 	void Render(int x, int y); // Renders the object at a given position
 	// GETTERS

@@ -6,25 +6,20 @@
 
 class LTexture {
 public:
-	//Initializes variables
-	LTexture();
-	//Deallocates memory
-	~LTexture();
-	//Loads image at specified path
-	bool LoadFromFile(std::string path, bool colorKey = false);
-	bool LoadFromText(std::string text, SDL_Color color);
-	//Deallocates texture
-	void Free();
-	//Renders texture at given point
-	void Render(int x, int y, SDL_Rect *blockRect = nullptr);
-	//Gets image dimensions
+	LTexture(); // Initializes variables
+	~LTexture(); // Deallocates memory
+	bool LoadFromFile(std::string path, bool colorKey = false); // Loads image at specified path, can color key cyan
+	bool LoadFromText(std::string text, SDL_Color color); // loads image out of a text string
+	void Free(); // Deallocates texture
+	void Render(int x, int y, SDL_Rect *blockRect = nullptr); // Renders texture at given point
+	// GETTERS
 	int GetWidth() { return  mWidth; };
 	int GetHeight() { return mHeight; };
 
 private:
-	//The actual hardware texture
+	// The actual hardware texture
 	SDL_Texture* mTexture;
-	//Image dimensions
+	// Image dimensions
 	int mWidth;
 	int mHeight;
 };

@@ -5,6 +5,8 @@ Object::Object(LTexture *texure, int renderingType) {
 	mTexture = texure;
 	velX = 0;
 	velY = 0;
+	mPolygon.SetD2CenterX(texure->GetWidth() / 2);
+	mPolygon.SetD2CenterY(texure->GetHeight() / 2);
 }
 
 void Object::Update() {
@@ -16,6 +18,15 @@ void Object::Update() {
 	}
 	mPolygon.UpdatePosX(velX);
 	mPolygon.UpdatePosY(velY);
+}
+
+bool Object::HandleEvent(SDL_Event *e) {
+	int mouseX, mouseY;
+	SDL_GetMouseState(&mouseX, &mouseY);
+	if (GetPolygon()->IsInside(Point{ mouseX, mouseY }) && e->type == SDL_MOUSEBUTTONDOWN) {
+		return true;
+	}
+	return false;
 }
 
 void Object::Render() {
