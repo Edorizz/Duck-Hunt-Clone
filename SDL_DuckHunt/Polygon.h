@@ -12,11 +12,12 @@ public:
 	bool IsInside(Point point);
 	// SETTERS
 	void SetPosition(int x, int y) { mPosX = x; mPosY = y; }
-	void SetRadius(int x) { radius = x; }
+	void SetRadius(int x) { radius = x; mIsCircle = true; }
 	// GETTERS
 	int GetSides() { return mSides; }
 	int GetPosX() { return mPosX; }
 	int GetPosY() { return mPosY; }
+	int GetRadius() { return radius; }
 	bool IsCircle() { return mIsCircle; }
 	Point* GetVertex(int i) { return &vertices[i]; }
 private:

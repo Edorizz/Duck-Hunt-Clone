@@ -28,25 +28,41 @@ void BallBounceLoop();
 int main(int args, char *argv[]) {
 	if (Init() && LoadMedia()) {
 		bool isGameDone = false;
+
 		Object triangle(&gTextures[TRIANGLE], 1);
-		triangle.mPolygon.SetPosition(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2);
-		triangle.mPolygon.AddVertex(Point{ 0, gTextures[TRIANGLE].GetHeight() });
-		triangle.mPolygon.AddVertex(Point{ gTextures[TRIANGLE].GetWidth() / 2, 0 });
-		triangle.mPolygon.AddVertex(Point{ gTextures[TRIANGLE].GetWidth(), gTextures[TRIANGLE].GetHeight() });
+		triangle.GetPolygon()->SetPosition(SCREEN_WIDTH / 4, SCREEN_HEIGHT / 2);
+		triangle.GetPolygon()->AddVertex(Point{ 0, gTextures[TRIANGLE].GetHeight() });
+		triangle.GetPolygon()->AddVertex(Point{ gTextures[TRIANGLE].GetWidth() / 2, 0 });
+		triangle.GetPolygon()->AddVertex(Point{ gTextures[TRIANGLE].GetWidth(), gTextures[TRIANGLE].GetHeight() });
+
+		Object circle(&gTextures[DOT], 1);
+		circle.GetPolygon()->SetPosition(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2);
+		circle.GetPolygon()->SetRadius(circle.GetTexture()->GetWidth() / 2); //! CIRCLE RADIUS IS MESSED UP
+
 		int mouseX, mouseY;
 		while (!isGameDone) {
 			while (SDL_PollEvent(&e)) {
 				if (e.type == SDL_QUIT) {
 					isGameDone = true;
-				} 
+				} if (e.type == SDL_KEYDOWN) {
+					switch (e.key.keysym.sym) {
+					case SDLK_SPACE:
+						SDL_GetMouseState(&mouseX, &mouseY);
+						if (circle.GetPolygon()->IsInside(Point{ mouseX, mouseY })) {
+							std::cout << "Inside circle!\n";
+						}
+						if (triangle.GetPolygon()->IsInside(Point{ mouseX, mouseY })) {
+							std::cout << "Inside triangle!\n";
+						}
+					default:
+						break;
+					}
+				}
 			}
-			SDL_GetMouseState(&mouseX, &mouseY);
-			std::cout << mouseX << ", " << mouseY << std::endl;
-			if (triangle.mPolygon.IsInside(Point{ mouseX, mouseY })) {
-				std::cout << "Inside!\n";
-			}
+		
 			SDL_RenderClear(gRenderer);
-			gTextures[TRIANGLE].Render(triangle.mPolygon.GetPosX(), triangle.mPolygon.GetPosY());
+			triangle.Render();
+			circle.Render();
 			SDL_RenderPresent(gRenderer);
 		}
 	}

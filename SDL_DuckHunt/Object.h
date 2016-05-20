@@ -5,8 +5,13 @@
 class Object {
 public:
 	Object(LTexture *texture, int renderingType);
-	Polygon mPolygon;
+	void Render(); // Renders the object at the polygon's position
+	void Render(int x, int y); // Renders the object at a given position
+	// GETTERS
+	LTexture* GetTexture() { return mTexture; }
+	Polygon* GetPolygon() { return &mPolygon; }
 private:
-	int mRenderingType;
+	Polygon mPolygon;
 	LTexture *mTexture;
+	int mRenderingType;
 };
