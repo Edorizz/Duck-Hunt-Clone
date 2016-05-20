@@ -16,8 +16,6 @@ enum Textures {
 const int SCREEN_HEIGHT = 480;
 const int SCREEN_WIDTH = 640;
 
-int maxVel = 8;
-
 // Globals
 SDL_Window *gWindow = nullptr;
 SDL_Renderer *gRenderer = nullptr;
@@ -25,11 +23,16 @@ LTexture gTextures[MAX_TEXTURES];
 TTF_Font *gFont = nullptr;
 SDL_Event e;
 
+// Game variables
+int maxVel = 8;
+int ballCount = 2;
+
+// Random Number Generation
 std::mt19937 randomGenerator(time(0));
 std::uniform_int_distribution<int> random(-maxVel,maxVel);
 
 // Objects
-Object *ball = nullptr;
+std::vector<Object*>balls;
 
 // Prototypes
 bool Init();
@@ -37,26 +40,32 @@ bool LoadMedia();
 Object* NewBall();
 int RandomPositiveOrNegative(int x);
 void SetRandomVelocity(Object* obj);
+void HandleObjects(std::vector<Object*>&objects, SDL_Event *e);
+void CreateObjects(std::vector<Object*>&objects);
 
 int main(int args, char *argv[]) {
 	if (Init() && LoadMedia()) {
 		bool isGameDone = false;
-		ball = NewBall();
+		CreateObjects(balls);
 		while (!isGameDone) {
+			if (balls.size() == 0) {
+				CreateObjects(balls);
+			}
 			while (SDL_PollEvent(&e)) { // The main event handler
 				if (e.type == SDL_QUIT) {
 					isGameDone = true;
 				}
-				if (ball->HandleEvent(&e)) {
-					delete ball;
-					ball = NewBall();
-				}
+				HandleObjects(balls, &e);
 			}
 			// Updating
-			ball->Update();
+			for (int i = 0; i < balls.size(); i++) {
+				balls[i]->Update();
+			}
 			// Rendering
 			SDL_RenderClear(gRenderer);
-			ball->Render();
+			for (int i = 0; i < balls.size(); i++) {
+				balls[i]->Render();
+			}
 			SDL_RenderPresent(gRenderer);
 		}
 	}
@@ -93,7 +102,21 @@ int RandomPositiveOrNegative(int x) {
 
 
 // GAME HELPER FUNCTIONS
+void HandleObjects(std::vector<Object*>&objects, SDL_Event *e) {
+	for (int i = 0; i < objects.size(); i++) {
+		if (objects[i]->HandleEvent(e)) {
+			delete objects[i];
+			objects[i] = objects[objects.size() - 1];
+			objects.pop_back();
+		}
+	}
+}
 
+void CreateObjects(std::vector<Object*>&objects) {
+	for (int i = 0; i < ballCount; i++) {
+		objects.push_back(NewBall());
+	}
+}
 
 
 // MAIN FUNCTIONS
