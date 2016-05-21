@@ -11,7 +11,7 @@ public:
 	bool LoadFromFile(std::string path, bool colorKey = false); // Loads image at specified path, can color key cyan
 	bool LoadFromText(std::string text, SDL_Color color); // loads image out of a text string
 	void Free(); // Deallocates texture
-	void Render(int x, int y, double angle, SDL_Rect *blockRect = nullptr); // Renders texture at given point
+	void Render(int x, int y, double angle, double multiplier, SDL_RendererFlip flipType, SDL_Rect *blockRect = nullptr); // Renders texture at given point
 	// GETTERS
 	int GetWidth() { return  mWidth; };
 	int GetHeight() { return mHeight; };

@@ -8,7 +8,7 @@
 #include "Object.h"
 
 enum Textures {
-	DOT, TRIANGLE, MAX_TEXTURES
+	DOT, TRIANGLE, BIRD, MAX_TEXTURES
 };
 
 // Screen dimension
@@ -75,7 +75,7 @@ int main(int args, char *argv[]) {
 
 // OBJECT HELPER FUNCTIONS
 Object* NewBall() {
-	Object *obj = new Object(&gTextures[DOT], 1);
+	Object *obj = new Object(&gTextures[BIRD], 1, 2);
 	obj->GetPolygon()->SetPosition(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2);
 	obj->GetPolygon()->SetRadius(obj->GetTexture()->GetWidth());
 	SetRandomVelocity(obj);
@@ -155,6 +155,10 @@ bool LoadMedia() {
 		success = false;
 	}
 	if (!gTextures[TRIANGLE].LoadFromFile("Resources/triangle.png")) {
+		std::cout << "Could not load image!\n";
+		success = false;
+	}
+	if (!gTextures[BIRD].LoadFromFile("Resources/bird.png", true)) {
 		std::cout << "Could not load image!\n";
 		success = false;
 	}

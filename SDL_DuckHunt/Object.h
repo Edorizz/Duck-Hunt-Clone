@@ -7,7 +7,7 @@ extern const int SCREEN_WIDTH;
 
 class Object {
 public:
-	Object(LTexture *texture, int renderingType);
+	Object(LTexture *texture, int renderingType, int multiplier = 1);
 	void Update(); // Updates position, if ball is out of bounds it bounces back
 	bool HandleEvent(SDL_Event *e); // Returns true if we interacted with the ball
 	void CalculateAngle(); // Calculates angle, duhh...
@@ -26,6 +26,9 @@ private:
 	Polygon mPolygon;
 	LTexture *mTexture;
 	int mVelX, mVelY;
-	double mAngle;
 	int mRenderingType;
+	int mAngleDiff = 0;
+	double mScalingMultiplier;
+	double mAngle = 99999;
+	SDL_RendererFlip mFlipType = SDL_FLIP_NONE;
 };
