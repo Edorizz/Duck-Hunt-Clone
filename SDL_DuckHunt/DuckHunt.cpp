@@ -4,7 +4,6 @@
 #include <vector>
 #include <random>
 #include <ctime>
-#include <cmath>
 #include "LTexture.h"
 #include "Object.h"
 

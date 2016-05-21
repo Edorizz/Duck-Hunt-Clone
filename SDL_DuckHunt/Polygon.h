@@ -31,6 +31,6 @@ private:
 	bool mIsCircle; // Is this a circle?...
 	int radius; // ...If it is, this is the radius, else, it's just 0
 	int mPosX, mPosY; // Top left coordinate
-	int d2CenterX, d2CenterY;
+	int d2CenterX, d2CenterY; // Distance to center (For circles)
 	int mSides; // Number of sides
 };

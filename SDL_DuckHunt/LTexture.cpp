@@ -68,16 +68,16 @@ void LTexture::Free() {
 	}
 }
 
-void LTexture::Render(int x, int y, SDL_Rect *blockRect) {
+void LTexture::Render(int x, int y, double angle, SDL_Rect *blockRect) {
 	if (blockRect == NULL) {
 		SDL_Rect renderQuad = { x, y, mWidth, mHeight };
-		SDL_RenderCopy(gRenderer, mTexture, NULL, &renderQuad);
+		SDL_RenderCopyEx(gRenderer, mTexture, NULL, &renderQuad, angle, nullptr, SDL_FLIP_NONE);
 	} else {
 		SDL_Rect pos;
 		pos.x = x;
 		pos.y = y;
 		pos.w = blockRect->w;
 		pos.h = blockRect->h;
-		SDL_RenderCopy(gRenderer, mTexture, blockRect, &pos);
+		SDL_RenderCopyEx(gRenderer, mTexture, blockRect, &pos, angle, nullptr, SDL_FLIP_NONE);
 	}
 }
