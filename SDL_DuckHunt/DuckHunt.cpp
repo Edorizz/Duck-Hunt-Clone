@@ -1,7 +1,6 @@
 #include <SDL.h>
 #include <SDL_image.h>
 #include <iostream>
-#include <vector>
 #include <random>
 #include <ctime>
 #include "LTexture.h"
@@ -10,7 +9,7 @@
 typedef std::vector<Object*> Objects;
 
 enum Textures {
-	DOT, TRIANGLE, BIRD, BACKGROUND, MAX_TEXTURES
+	DOT, TRIANGLE, BIRD, BIRD_2, BACKGROUND, MAX_TEXTURES
 };
 
 // Screen dimension
@@ -22,6 +21,7 @@ const int FLOOR_HEIGHT = 478;
 SDL_Window *gWindow = nullptr;
 SDL_Renderer *gRenderer = nullptr;
 LTexture gTextures[MAX_TEXTURES];
+std::vector<LTexture*> gBirdTextures(2);
 TTF_Font *gFont = nullptr;
 SDL_Event e;
 
@@ -73,7 +73,7 @@ int main(int args, char *argv[]) {
 
 // OBJECT HELPER FUNCTIONS
 Object* NewBall() {
-	Object *obj = new Object(&gTextures[BIRD], 1, 2.4);
+	Object *obj = new Object(gBirdTextures, 1, 2.4);
 	obj->GetPolygon()->SetRadius(obj->GetTexture()->GetWidth() * 1.5);
 	obj->GetPolygon()->SetPosition(randomPosX(randomGenerator), FLOOR_HEIGHT - obj->GetPolygon()->GetRadius() * 1.5);
 	SetRandomVelocity(obj);
@@ -138,6 +138,7 @@ void RenderAll() {
 	SDL_RenderPresent(gRenderer);
 }
 
+
 // MAIN FUNCTIONS
 bool Init() {
 	bool success = true;
@@ -182,10 +183,16 @@ bool LoadMedia() {
 		std::cout << "Could not load image!\n";
 		success = false;
 	}
+	if (!gTextures[BIRD_2].LoadFromFile("Resources/bird2.png", true)) {
+		std::cout << "Could not load image!\n";
+		success = false;
+	}
 	if (!gTextures[BACKGROUND].LoadFromFile("Resources/background.png", true)) {
 		std::cout << "Could not load image!\n";
 		success = false;
 	}
+	gBirdTextures[0] = &gTextures[BIRD];
+	gBirdTextures[1] = &gTextures[BIRD_2];
 	return success;
 }
 

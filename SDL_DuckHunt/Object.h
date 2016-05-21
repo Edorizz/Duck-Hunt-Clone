@@ -1,4 +1,5 @@
 #pragma once
+#include <vector>
 #include "Polygon.h"
 #include "LTexture.h"
 
@@ -8,7 +9,7 @@ extern const int FLOOR_HEIGHT;
 
 class Object {
 public:
-	Object(LTexture *texture, int renderingType, double multiplier = 1);
+	Object(std::vector<LTexture*> textures, int renderingType, double multiplier = 1);
 	void Update(); // Updates position, if ball is out of bounds it bounces back
 	bool HandleEvent(SDL_Event *e); // Returns true if we interacted with the ball
 	void CalculateAngle(); // Calculates angle, duhh...
@@ -25,10 +26,12 @@ public:
 	void SetVelY(int y) { mVelY = y; }
 private:
 	Polygon mPolygon;
+	std::vector<LTexture*> mTextures;
 	LTexture *mTexture;
 	int mVelX, mVelY;
 	int mRenderingType;
 	int mAngleDiff = 0;
+	int timer = 12;
 	double mScalingMultiplier;
 	double mAngle = 99999;
 	SDL_RendererFlip mFlipType = SDL_FLIP_NONE;

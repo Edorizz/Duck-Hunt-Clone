@@ -1,17 +1,24 @@
 #include "Object.h"
 #include <cmath>
+#include <algorithm>
 
-Object::Object(LTexture *texure, int renderingType, double multiplier) {
+Object::Object(std::vector<LTexture*> textures, int renderingType, double multiplier) {
+	mTextures = textures;
 	mRenderingType = renderingType;
-	mTexture = texure;
+	mTexture = textures[0];
 	mVelX = 0;
 	mVelY = 0;
-	mPolygon.SetD2CenterX(texure->GetWidth() / 2);
-	mPolygon.SetD2CenterY(texure->GetHeight() / 2);
+	mPolygon.SetD2CenterX(textures[0]->GetWidth() / 2);
+	mPolygon.SetD2CenterY(textures[0]->GetHeight() / 2);
 	mScalingMultiplier = multiplier;
 }
 
 void Object::Update() {
+	if (timer <= 0) {
+		std::swap(mTextures[0], mTextures[1]);
+		mTexture = mTextures[0];
+		timer = 12;
+	}
 	if (mAngle == 99999) {
 		CalculateAngle();
 	}
@@ -25,6 +32,7 @@ void Object::Update() {
 	}
 	mPolygon.UpdatePosX(mVelX);
 	mPolygon.UpdatePosY(mVelY);
+	timer--;
 }
 
 bool Object::HandleEvent(SDL_Event *e) {
