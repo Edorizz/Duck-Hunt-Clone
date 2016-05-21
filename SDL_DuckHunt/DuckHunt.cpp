@@ -9,7 +9,7 @@
 typedef std::vector<Object*> Objects;
 
 enum Textures {
-	DOT, TRIANGLE, BIRD, BIRD_2, BACKGROUND, MAX_TEXTURES
+	DOT, TRIANGLE, BIRD, BIRD_2, BIRD_3, BACKGROUND, MAX_TEXTURES
 };
 
 // Screen dimension
@@ -21,7 +21,7 @@ const int FLOOR_HEIGHT = 478;
 SDL_Window *gWindow = nullptr;
 SDL_Renderer *gRenderer = nullptr;
 LTexture gTextures[MAX_TEXTURES];
-std::vector<LTexture*> gBirdTextures(2);
+std::vector<LTexture*> gBirdTextures(3);
 TTF_Font *gFont = nullptr;
 SDL_Event e;
 
@@ -187,12 +187,17 @@ bool LoadMedia() {
 		std::cout << "Could not load image!\n";
 		success = false;
 	}
+	if (!gTextures[BIRD_3].LoadFromFile("Resources/bird3.png", true)) {
+		std::cout << "Could not load image!\n";
+		success = false;
+	}
 	if (!gTextures[BACKGROUND].LoadFromFile("Resources/background.png", true)) {
 		std::cout << "Could not load image!\n";
 		success = false;
 	}
 	gBirdTextures[0] = &gTextures[BIRD];
 	gBirdTextures[1] = &gTextures[BIRD_2];
+	gBirdTextures[2] = &gTextures[BIRD_3];
 	return success;
 }
 

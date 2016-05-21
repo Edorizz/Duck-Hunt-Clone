@@ -15,9 +15,13 @@ Object::Object(std::vector<LTexture*> textures, int renderingType, double multip
 
 void Object::Update() {
 	if (timer <= 0) {
+		if (mSwap) {
+			std::swap(mTextures[1], mTextures[2]);
+		}
 		std::swap(mTextures[0], mTextures[1]);
 		mTexture = mTextures[0];
-		timer = 12;
+		timer = 3;
+		mSwap = !mSwap;
 	}
 	if (mAngle == 99999) {
 		CalculateAngle();

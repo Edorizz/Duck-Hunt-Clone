@@ -31,7 +31,8 @@ private:
 	int mVelX, mVelY;
 	int mRenderingType;
 	int mAngleDiff = 0;
-	int timer = 12;
+	int timer = 3;
+	bool mSwap = false;
 	double mScalingMultiplier;
 	double mAngle = 99999;
 	SDL_RendererFlip mFlipType = SDL_FLIP_NONE;
