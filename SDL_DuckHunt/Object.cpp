@@ -1,7 +1,7 @@
 #include "Object.h"
 #include <cmath>
 
-Object::Object(LTexture *texure, int renderingType, int multiplier) {
+Object::Object(LTexture *texure, int renderingType, double multiplier) {
 	mRenderingType = renderingType;
 	mTexture = texure;
 	mVelX = 0;
@@ -19,7 +19,7 @@ void Object::Update() {
 		SetVelX(GetVelX() * -1);
 		CalculateAngle();
 	}
-	if (GetPolygon()->GetPosY() < 0 || GetPolygon()->GetPosY() + GetTexture()->GetHeight() * mScalingMultiplier > SCREEN_HEIGHT) {
+	if (GetPolygon()->GetPosY() < 0 || GetPolygon()->GetPosY() + GetTexture()->GetHeight() * mScalingMultiplier > FLOOR_HEIGHT) {
 		SetVelY(GetVelY() * -1);
 		CalculateAngle();
 	}

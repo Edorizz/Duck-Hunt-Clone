@@ -4,10 +4,11 @@
 
 extern const int SCREEN_HEIGHT;
 extern const int SCREEN_WIDTH;
+extern const int FLOOR_HEIGHT;
 
 class Object {
 public:
-	Object(LTexture *texture, int renderingType, int multiplier = 1);
+	Object(LTexture *texture, int renderingType, double multiplier = 1);
 	void Update(); // Updates position, if ball is out of bounds it bounces back
 	bool HandleEvent(SDL_Event *e); // Returns true if we interacted with the ball
 	void CalculateAngle(); // Calculates angle, duhh...

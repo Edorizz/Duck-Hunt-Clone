@@ -7,13 +7,16 @@
 #include "LTexture.h"
 #include "Object.h"
 
+typedef std::vector<Object*> Objects;
+
 enum Textures {
-	DOT, TRIANGLE, BIRD, MAX_TEXTURES
+	DOT, TRIANGLE, BIRD, BACKGROUND, MAX_TEXTURES
 };
 
 // Screen dimension
-const int SCREEN_HEIGHT = 480;
+const int SCREEN_HEIGHT = 560;
 const int SCREEN_WIDTH = 640;
+const int FLOOR_HEIGHT = 478;
 
 // Globals
 SDL_Window *gWindow = nullptr;
@@ -23,15 +26,17 @@ TTF_Font *gFont = nullptr;
 SDL_Event e;
 
 // Game variables
-int maxVel = 8;
+int maxVel = 10;
 int ballCount = 2;
 
 // Random Number Generation
 std::mt19937 randomGenerator(time(0));
-std::uniform_int_distribution<int> random(-maxVel,maxVel);
+std::uniform_int_distribution<int> randomVelocity(-maxVel + 1, maxVel - 1);
+std::uniform_int_distribution<int> randomPosX(0 + 100, SCREEN_WIDTH - 100);
+std::uniform_int_distribution<int> random(0, 100);
 
 // Objects
-std::vector<Object*>balls;
+Objects balls;
 
 // Prototypes
 bool Init();
@@ -39,8 +44,10 @@ bool LoadMedia();
 Object* NewBall();
 int RandomPositiveOrNegative(int x);
 void SetRandomVelocity(Object* obj);
-void HandleObjects(std::vector<Object*>&objects, SDL_Event *e);
-void CreateObjects(std::vector<Object*>&objects);
+void HandleObjects(Objects &objects, SDL_Event *e);
+void CreateObjects(Objects &objects);
+void UpdateObjects(Objects &objects);
+void RenderAll();
 
 int main(int args, char *argv[]) {
 	if (Init() && LoadMedia()) {
@@ -56,35 +63,26 @@ int main(int args, char *argv[]) {
 				}
 				HandleObjects(balls, &e);
 			}
-			// Updating
-			for (int i = 0; i < balls.size(); i++) {
-				balls[i]->Update();
-			}
-			// Rendering
-			SDL_RenderClear(gRenderer);
-			for (int i = 0; i < balls.size(); i++) {
-				balls[i]->Render();
-			}
-			SDL_RenderPresent(gRenderer);
+			UpdateObjects(balls);
+			RenderAll();
 		}
 	}
-
 	return 0;
 }
 
 
 // OBJECT HELPER FUNCTIONS
 Object* NewBall() {
-	Object *obj = new Object(&gTextures[BIRD], 1, 2);
-	obj->GetPolygon()->SetPosition(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2);
-	obj->GetPolygon()->SetRadius(obj->GetTexture()->GetWidth());
+	Object *obj = new Object(&gTextures[BIRD], 1, 2.4);
+	obj->GetPolygon()->SetRadius(obj->GetTexture()->GetWidth() * 1.5);
+	obj->GetPolygon()->SetPosition(randomPosX(randomGenerator), FLOOR_HEIGHT - obj->GetPolygon()->GetRadius() * 1.5);
 	SetRandomVelocity(obj);
 	return obj;
 }
 
 
 void SetRandomVelocity(Object* obj) {
-	int velX = random(randomGenerator);
+	int velX = randomVelocity(randomGenerator);
 	int velY = RandomPositiveOrNegative(maxVel - abs(velX));
 	obj->SetVel(velX, velY);
 }
@@ -92,7 +90,7 @@ void SetRandomVelocity(Object* obj) {
 
 // MATH FUNCTIONS
 int RandomPositiveOrNegative(int x) {
-	int rand = random(randomGenerator);
+	int rand = randomVelocity(randomGenerator);
 	if (rand < 0) {
 		return x * -1;
 	}
@@ -101,7 +99,13 @@ int RandomPositiveOrNegative(int x) {
 
 
 // GAME HELPER FUNCTIONS
-void HandleObjects(std::vector<Object*>&objects, SDL_Event *e) {
+void CreateObjects(Objects &objects) {
+	for (int i = 0; i < ballCount; i++) {
+		objects.push_back(NewBall());
+	}
+}
+
+void HandleObjects(Objects &objects, SDL_Event *e) {
 	for (int i = 0; i < objects.size(); i++) {
 		if (objects[i]->HandleEvent(e)) {
 			delete objects[i];
@@ -111,12 +115,28 @@ void HandleObjects(std::vector<Object*>&objects, SDL_Event *e) {
 	}
 }
 
-void CreateObjects(std::vector<Object*>&objects) {
-	for (int i = 0; i < ballCount; i++) {
-		objects.push_back(NewBall());
+void UpdateObjects(Objects &objects) {
+	for (int i = 0; i < objects.size(); i++) {
+		int rand = random(randomGenerator);
+		if (rand < 7 && SCREEN_HEIGHT - objects[i]->GetPolygon()->GetPosX() > 100
+			&& SCREEN_HEIGHT - objects[i]->GetPolygon()->GetPosX() < 500
+			&& FLOOR_HEIGHT - objects[i]->GetPolygon()->GetPosY() > 100
+			&& FLOOR_HEIGHT - objects[i]->GetPolygon()->GetPosY() < 300) {
+			SetRandomVelocity(objects[i]);
+			objects[i]->CalculateAngle();
+		}
+		objects[i]->Update();
 	}
 }
 
+void RenderAll() {
+	SDL_RenderClear(gRenderer);
+	for (int i = 0; i < balls.size(); i++) {
+		balls[i]->Render();
+	}
+	gTextures[BACKGROUND].Render(0, 0, 0, 2.5, SDL_FLIP_NONE);
+	SDL_RenderPresent(gRenderer);
+}
 
 // MAIN FUNCTIONS
 bool Init() {
@@ -135,7 +155,7 @@ bool Init() {
 				std::cout << "Could not create renderer! SDL_Error: " << SDL_GetError() << std::endl;
 				success = false;
 			} else {
-				SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
+				SDL_SetRenderDrawColor(gRenderer, 0x64, 0xB0, 0xFF, 0xFF);
 
 				int imgFlags = IMG_INIT_PNG;
 				if (!(IMG_Init(imgFlags) & imgFlags)) {
@@ -159,6 +179,10 @@ bool LoadMedia() {
 		success = false;
 	}
 	if (!gTextures[BIRD].LoadFromFile("Resources/bird.png", true)) {
+		std::cout << "Could not load image!\n";
+		success = false;
+	}
+	if (!gTextures[BACKGROUND].LoadFromFile("Resources/background.png", true)) {
 		std::cout << "Could not load image!\n";
 		success = false;
 	}
