@@ -26,8 +26,8 @@ TTF_Font *gFont = nullptr;
 SDL_Event e;
 
 // Game variables
-int maxVel = 10;
-int ballCount = 2;
+int maxVel = 9;
+int duckCount = 1;
 
 // Random Number Generation
 std::mt19937 randomGenerator(time(0));
@@ -36,12 +36,11 @@ std::uniform_int_distribution<int> randomPosX(0 + 100, SCREEN_WIDTH - 100);
 std::uniform_int_distribution<int> random(0, 100);
 
 // Objects
-Objects balls;
+Objects ducks;
 
 // Prototypes
 bool Init();
 bool LoadMedia();
-Object* NewBall();
 int RandomPositiveOrNegative(int x);
 void SetRandomVelocity(Object* obj);
 void HandleObjects(Objects &objects, SDL_Event *e);
@@ -49,23 +48,24 @@ void CreateObjects(Objects &objects);
 void UpdateObjects(Objects &objects);
 void DeleteDeadObjects(Objects &objects);
 void RenderAll();
+Object* NewBall();
 
 int main(int args, char *argv[]) {
 	if (Init() && LoadMedia()) {
 		bool isGameDone = false;
-		CreateObjects(balls);
+		CreateObjects(ducks);
 		while (!isGameDone) {
-			if (balls.size() == 0) {
-				CreateObjects(balls);
+			if (ducks.size() == 0) {
+				CreateObjects(ducks);
 			}
 			while (SDL_PollEvent(&e)) { // The main event handler
 				if (e.type == SDL_QUIT) {
 					isGameDone = true;
 				}
-				HandleObjects(balls, &e);
+				HandleObjects(ducks, &e);
 			}
-			DeleteDeadObjects(balls);
-			UpdateObjects(balls);
+			DeleteDeadObjects(ducks);
+			UpdateObjects(ducks);
 			RenderAll();
 		}
 	}
@@ -82,6 +82,16 @@ Object* NewBall() {
 	return obj;
 }
 
+Object* NewDuck() {
+	Object *obj = new Object(gBirdTextures, 1, 2.4);
+	obj->GetPolygon()->SetPosition(randomPosX(randomGenerator), FLOOR_HEIGHT - obj->GetTexture()->GetHeight() * 3);
+	obj->GetPolygon()->AddVertex(Point{ 0, 0 });
+	obj->GetPolygon()->AddVertex(Point{ obj->GetTexture()->GetWidth() * 2, 0 });
+	obj->GetPolygon()->AddVertex(Point{ obj->GetTexture()->GetWidth() * 2, obj->GetTexture()->GetHeight() * 2 });
+	obj->GetPolygon()->AddVertex(Point{ 0, obj->GetTexture()->GetHeight() * 2 });
+	SetRandomVelocity(obj);
+	return obj;
+}
 
 void SetRandomVelocity(Object* obj) {
 	int velX = RandomPositiveOrNegative(randomVelocity(randomGenerator));
@@ -102,8 +112,8 @@ int RandomPositiveOrNegative(int x) {
 
 // GAME HELPER FUNCTIONS
 void CreateObjects(Objects &objects) {
-	for (int i = 0; i < ballCount; i++) {
-		objects.push_back(NewBall());
+	for (int i = 0; i < duckCount; i++) {
+		objects.push_back(NewDuck());
 	}
 }
 
@@ -139,8 +149,8 @@ void UpdateObjects(Objects &objects) {
 
 void RenderAll() {
 	SDL_RenderClear(gRenderer);
-	for (int i = 0; i < balls.size(); i++) {
-		balls[i]->Render();
+	for (int i = 0; i < ducks.size(); i++) {
+		ducks[i]->Render();
 	}
 	gTextures[BACKGROUND].Render(0, 0, 0, 2.5, SDL_FLIP_NONE);
 	gTextures[UI].Render(25, SCREEN_HEIGHT - gTextures[UI].GetHeight() * 2.2, 0, 2.5, SDL_FLIP_NONE);

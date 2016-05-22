@@ -2,6 +2,8 @@
 #include <cmath>
 #include <algorithm>
 
+extern SDL_Renderer *gRenderer;
+
 Object::Object(std::vector<LTexture*> textures, int renderingType, double multiplier) {
 	mTextures = textures;
 	mRenderingType = renderingType;
@@ -75,7 +77,7 @@ void Object::UpdateFalling() {
 void Object::HandleEvent(SDL_Event *e) {
 	int mouseX, mouseY;
 	SDL_GetMouseState(&mouseX, &mouseY);
-	if (GetPolygon()->IsInside(Point{ mouseX, mouseY }) && e->type == SDL_MOUSEBUTTONDOWN) {
+	if (e->type == SDL_MOUSEBUTTONDOWN && GetPolygon()->IsInside(Point{ mouseX, mouseY })) {
 		mState = SHOT;
 		mVelX = 0;
 		mVelY = 0;

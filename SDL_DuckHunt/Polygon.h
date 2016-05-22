@@ -2,7 +2,8 @@
 #include <vector>
 
 struct Point {
-	int x, y;
+	int x, y; // Relative to the object position
+	int PosX, PosY; // The actual screen position
 };
 
 class Polygon {
