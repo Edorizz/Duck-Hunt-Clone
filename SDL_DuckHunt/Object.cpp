@@ -14,6 +14,16 @@ Object::Object(std::vector<LTexture*> textures, int renderingType, double multip
 }
 
 void Object::Update() {
+	if (mState == FLYING) {
+		UpdateFlying();
+	} else if (mState == SHOT) {
+		UpdateShot();
+	} else if (mState == FALLING) {
+		UpdateFalling();
+	}
+}
+
+void Object::UpdateFlying() {
 	if (timer <= 0) {
 		if (mSwap) {
 			std::swap(mTextures[1], mTextures[2]);
@@ -39,13 +49,41 @@ void Object::Update() {
 	timer--;
 }
 
-bool Object::HandleEvent(SDL_Event *e) {
+void Object::UpdateShot() {
+	mShotTimer--;
+	if (mShotTimer <= 0) {
+		mState = FALLING;
+		mVelY = 4;
+	}
+}
+
+void Object::UpdateFalling() {
+	if (timer <= 0) {
+		std::swap(mTextures[_BIRD_FALLING], mTextures[_BIRD_FALLING_2]);
+		mTexture = mTextures[_BIRD_FALLING];
+		timer = 3;
+		mSwap = !mSwap;
+	}
+	if (GetPolygon()->GetPosY() + GetTexture()->GetHeight() * mScalingMultiplier > FLOOR_HEIGHT) {
+		mIsDead = true;
+	}
+	mPolygon.UpdatePosX(mVelX);
+	mPolygon.UpdatePosY(mVelY);
+	timer--;
+}
+
+void Object::HandleEvent(SDL_Event *e) {
 	int mouseX, mouseY;
 	SDL_GetMouseState(&mouseX, &mouseY);
 	if (GetPolygon()->IsInside(Point{ mouseX, mouseY }) && e->type == SDL_MOUSEBUTTONDOWN) {
-		return true;
+		mState = SHOT;
+		mVelX = 0;
+		mVelY = 0;
+		mTexture = mTextures[_BIRD_SHOT];
+		mAngle = 0;
+		mAngleDiff = 0;
+		mFlipType = SDL_FLIP_NONE;
 	}
-	return false;
 }
 
 void Object::CalculateAngle() {

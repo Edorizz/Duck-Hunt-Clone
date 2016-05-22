@@ -9,7 +9,7 @@
 typedef std::vector<Object*> Objects;
 
 enum Textures {
-	DOT, TRIANGLE, BIRD, BIRD_2, BIRD_3, BACKGROUND, MAX_TEXTURES
+	BIRD, BIRD_2, BIRD_3, BIRD_SHOT, BIRD_FALLING, BIRD_FALLING_2, BACKGROUND, UI, MAX_TEXTURES
 };
 
 // Screen dimension
@@ -21,7 +21,7 @@ const int FLOOR_HEIGHT = 478;
 SDL_Window *gWindow = nullptr;
 SDL_Renderer *gRenderer = nullptr;
 LTexture gTextures[MAX_TEXTURES];
-std::vector<LTexture*> gBirdTextures(3);
+std::vector<LTexture*> gBirdTextures(6);
 TTF_Font *gFont = nullptr;
 SDL_Event e;
 
@@ -31,7 +31,7 @@ int ballCount = 2;
 
 // Random Number Generation
 std::mt19937 randomGenerator(time(0));
-std::uniform_int_distribution<int> randomVelocity(-maxVel + 1, maxVel - 1);
+std::uniform_int_distribution<int> randomVelocity(5, maxVel - 1);
 std::uniform_int_distribution<int> randomPosX(0 + 100, SCREEN_WIDTH - 100);
 std::uniform_int_distribution<int> random(0, 100);
 
@@ -47,6 +47,7 @@ void SetRandomVelocity(Object* obj);
 void HandleObjects(Objects &objects, SDL_Event *e);
 void CreateObjects(Objects &objects);
 void UpdateObjects(Objects &objects);
+void DeleteDeadObjects(Objects &objects);
 void RenderAll();
 
 int main(int args, char *argv[]) {
@@ -63,6 +64,7 @@ int main(int args, char *argv[]) {
 				}
 				HandleObjects(balls, &e);
 			}
+			DeleteDeadObjects(balls);
 			UpdateObjects(balls);
 			RenderAll();
 		}
@@ -82,7 +84,7 @@ Object* NewBall() {
 
 
 void SetRandomVelocity(Object* obj) {
-	int velX = randomVelocity(randomGenerator);
+	int velX = RandomPositiveOrNegative(randomVelocity(randomGenerator));
 	int velY = RandomPositiveOrNegative(maxVel - abs(velX));
 	obj->SetVel(velX, velY);
 }
@@ -107,7 +109,13 @@ void CreateObjects(Objects &objects) {
 
 void HandleObjects(Objects &objects, SDL_Event *e) {
 	for (int i = 0; i < objects.size(); i++) {
-		if (objects[i]->HandleEvent(e)) {
+		objects[i]->HandleEvent(e);
+	}
+}
+
+void DeleteDeadObjects(Objects &objects) {
+	for (int i = 0; i < objects.size(); i++) {
+		if (objects[i]->IsDead()) {
 			delete objects[i];
 			objects[i] = objects[objects.size() - 1];
 			objects.pop_back();
@@ -118,9 +126,9 @@ void HandleObjects(Objects &objects, SDL_Event *e) {
 void UpdateObjects(Objects &objects) {
 	for (int i = 0; i < objects.size(); i++) {
 		int rand = random(randomGenerator);
-		if (rand < 7 && SCREEN_HEIGHT - objects[i]->GetPolygon()->GetPosX() > 100
+		if (objects[i]->GetState() == FLYING && rand < 8 && SCREEN_HEIGHT - objects[i]->GetPolygon()->GetPosX() > 100
 			&& SCREEN_HEIGHT - objects[i]->GetPolygon()->GetPosX() < 500
-			&& FLOOR_HEIGHT - objects[i]->GetPolygon()->GetPosY() > 100
+			&& FLOOR_HEIGHT - objects[i]->GetPolygon()->GetPosY() > 220
 			&& FLOOR_HEIGHT - objects[i]->GetPolygon()->GetPosY() < 300) {
 			SetRandomVelocity(objects[i]);
 			objects[i]->CalculateAngle();
@@ -135,6 +143,7 @@ void RenderAll() {
 		balls[i]->Render();
 	}
 	gTextures[BACKGROUND].Render(0, 0, 0, 2.5, SDL_FLIP_NONE);
+	gTextures[UI].Render(25, SCREEN_HEIGHT - gTextures[UI].GetHeight() * 2.2, 0, 2.5, SDL_FLIP_NONE);
 	SDL_RenderPresent(gRenderer);
 }
 
@@ -171,14 +180,6 @@ bool Init() {
 
 bool LoadMedia() {
 	bool success = true;
-	if (!gTextures[DOT].LoadFromFile("Resources/dot.png", true)) {
-		std::cout << "Could not load image!\n";
-		success = false;
-	}
-	if (!gTextures[TRIANGLE].LoadFromFile("Resources/triangle.png")) {
-		std::cout << "Could not load image!\n";
-		success = false;
-	}
 	if (!gTextures[BIRD].LoadFromFile("Resources/bird.png", true)) {
 		std::cout << "Could not load image!\n";
 		success = false;
@@ -191,13 +192,33 @@ bool LoadMedia() {
 		std::cout << "Could not load image!\n";
 		success = false;
 	}
+	if (!gTextures[BIRD_SHOT].LoadFromFile("Resources/bird_shot.png", true)) {
+		std::cout << "Could not load image!\n";
+		success = false;
+	}
+	if (!gTextures[BIRD_FALLING].LoadFromFile("Resources/bird_falling1.png", true)) {
+		std::cout << "Could not load image!\n";
+		success = false;
+	}
+	if (!gTextures[BIRD_FALLING_2].LoadFromFile("Resources/bird_falling2.png", true)) {
+		std::cout << "Could not load image!\n";
+		success = false;
+	}
 	if (!gTextures[BACKGROUND].LoadFromFile("Resources/background.png", true)) {
+		std::cout << "Could not load image!\n";
+		success = false;
+	}
+	if (!gTextures[UI].LoadFromFile("Resources/gui.png", true)) {
 		std::cout << "Could not load image!\n";
 		success = false;
 	}
 	gBirdTextures[0] = &gTextures[BIRD];
 	gBirdTextures[1] = &gTextures[BIRD_2];
 	gBirdTextures[2] = &gTextures[BIRD_3];
+	gBirdTextures[3] = &gTextures[BIRD_SHOT];
+	gBirdTextures[4] = &gTextures[BIRD_FALLING];
+	gBirdTextures[5] = &gTextures[BIRD_FALLING_2];
+
 	return success;
 }
 
