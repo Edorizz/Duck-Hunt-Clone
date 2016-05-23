@@ -9,7 +9,7 @@
 typedef std::vector<Object*> Objects;
 
 enum Textures {
-	BIRD, BIRD_2, BIRD_3, BIRD_SHOT, BIRD_FALLING, BIRD_FALLING_2, BACKGROUND, UI, MAX_TEXTURES
+	BIRD, BIRD_2, BIRD_3, BIRD_SHOT, BIRD_FALLING, BIRD_FALLING_2, BIRD_STATUS_ALIVE, BIRD_STATUS_DEAD, BACKGROUND, UI, BULLET, MAX_TEXTURES
 };
 
 // Screen dimension
@@ -27,7 +27,9 @@ SDL_Event e;
 
 // Game variables
 int maxVel = 9;
-int duckCount = 1;
+int duckCount = 2;
+int currentDuck = 0;
+int bulletsLeft = 3;
 
 // Random Number Generation
 std::mt19937 randomGenerator(time(0));
@@ -37,6 +39,7 @@ std::uniform_int_distribution<int> random(0, 100);
 
 // Objects
 Objects ducks;
+bool ducksStatus[10]; // true = alive, false = dead
 
 // Prototypes
 bool Init();
@@ -48,12 +51,13 @@ void CreateObjects(Objects &objects);
 void UpdateObjects(Objects &objects);
 void DeleteDeadObjects(Objects &objects);
 void RenderAll();
-Object* NewBall();
+void NewRound();
 
 int main(int args, char *argv[]) {
 	if (Init() && LoadMedia()) {
 		bool isGameDone = false;
 		CreateObjects(ducks);
+		NewRound();
 		while (!isGameDone) {
 			if (ducks.size() == 0) {
 				CreateObjects(ducks);
@@ -61,6 +65,8 @@ int main(int args, char *argv[]) {
 			while (SDL_PollEvent(&e)) { // The main event handler
 				if (e.type == SDL_QUIT) {
 					isGameDone = true;
+				} else if (e.type == SDL_MOUSEBUTTONDOWN) {
+					bulletsLeft--;
 				}
 				HandleObjects(ducks, &e);
 			}
@@ -74,13 +80,6 @@ int main(int args, char *argv[]) {
 
 
 // OBJECT HELPER FUNCTIONS
-Object* NewBall() {
-	Object *obj = new Object(gBirdTextures, 1, 2.4);
-	obj->GetPolygon()->SetRadius(obj->GetTexture()->GetWidth() * 1.5);
-	obj->GetPolygon()->SetPosition(randomPosX(randomGenerator), FLOOR_HEIGHT - obj->GetPolygon()->GetRadius() * 1.5);
-	SetRandomVelocity(obj);
-	return obj;
-}
 
 Object* NewDuck() {
 	Object *obj = new Object(gBirdTextures, 1, 2.4);
@@ -111,7 +110,16 @@ int RandomPositiveOrNegative(int x) {
 
 
 // GAME HELPER FUNCTIONS
+
+void NewRound() {
+	currentDuck = 0;
+	for (int i = 0; i < 10; i++) {
+		ducksStatus[i] = true;
+	}
+}
+
 void CreateObjects(Objects &objects) {
+	bulletsLeft = 3;
 	for (int i = 0; i < duckCount; i++) {
 		objects.push_back(NewDuck());
 	}
@@ -126,9 +134,13 @@ void HandleObjects(Objects &objects, SDL_Event *e) {
 void DeleteDeadObjects(Objects &objects) {
 	for (int i = 0; i < objects.size(); i++) {
 		if (objects[i]->IsDead()) {
+			ducksStatus[currentDuck++] = false;
 			delete objects[i];
 			objects[i] = objects[objects.size() - 1];
 			objects.pop_back();
+			if (currentDuck == 10) {
+				NewRound();
+			}
 		}
 	}
 }
@@ -154,6 +166,16 @@ void RenderAll() {
 	}
 	gTextures[BACKGROUND].Render(0, 0, 0, 2.5, SDL_FLIP_NONE);
 	gTextures[UI].Render(25, SCREEN_HEIGHT - gTextures[UI].GetHeight() * 2.2, 0, 2.5, SDL_FLIP_NONE);
+	for (int i = 0; i < 10; i++) {
+		if (ducksStatus[i]) {
+			gTextures[BIRD_STATUS_ALIVE].Render(25 + 90 * 2.5 + ((i - 1) * gTextures[BIRD_STATUS_DEAD].GetWidth() * 2.5), SCREEN_HEIGHT - gTextures[UI].GetHeight() * 2.2 + 30 * 2.5, 0, 2.5, SDL_FLIP_NONE);
+		} else {
+			gTextures[BIRD_STATUS_DEAD].Render(25 + 90 * 2.5 + ((i - 1) * gTextures[BIRD_STATUS_DEAD].GetWidth() * 2.5), SCREEN_HEIGHT - gTextures[UI].GetHeight() * 2.2 + 30 * 2.5, 0, 2.5, SDL_FLIP_NONE);
+		}
+	}
+	for (int i = 0; i < bulletsLeft; i++) {
+		gTextures[BULLET].Render(25 + 10 * 2.5 + (i * gTextures[BULLET].GetWidth() * 2.5), SCREEN_HEIGHT - gTextures[UI].GetHeight() * 2.2 + 30 * 2.5, 0, 2.5, SDL_FLIP_NONE);
+	}
 	SDL_RenderPresent(gRenderer);
 }
 
@@ -188,7 +210,7 @@ bool Init() {
 	return success;
 }
 
-bool LoadMedia() {
+bool LoadMedia() { //TODO: TRY TO SHRINK THIS FUNCTION
 	bool success = true;
 	if (!gTextures[BIRD].LoadFromFile("Resources/bird.png", true)) {
 		std::cout << "Could not load image!\n";
@@ -214,11 +236,23 @@ bool LoadMedia() {
 		std::cout << "Could not load image!\n";
 		success = false;
 	}
+	if (!gTextures[BIRD_STATUS_ALIVE].LoadFromFile("Resources/duck_marker_white.png", true)) {
+		std::cout << "Could not load image!\n";
+		success = false;
+	}
+	if (!gTextures[BIRD_STATUS_DEAD].LoadFromFile("Resources/duck_marker_red.png", true)) {
+		std::cout << "Could not load image!\n";
+		success = false;
+	}
 	if (!gTextures[BACKGROUND].LoadFromFile("Resources/background.png", true)) {
 		std::cout << "Could not load image!\n";
 		success = false;
 	}
 	if (!gTextures[UI].LoadFromFile("Resources/gui.png", true)) {
+		std::cout << "Could not load image!\n";
+		success = false;
+	}
+	if (!gTextures[BULLET].LoadFromFile("Resources/bullet.png", true)) {
 		std::cout << "Could not load image!\n";
 		success = false;
 	}
